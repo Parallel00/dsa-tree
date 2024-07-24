@@ -1,0 +1,149 @@
+class BinaryTreeNode {
+  constructor(val, left = null, right = null) {
+    this.val = val;
+    this.left = left;
+    this.right = right;
+  }
+}
+
+class BinaryTree {
+  constructor(root = null) {
+    this.root = root;
+  }
+
+  minDepth() {
+    if (!this.root) return 0;
+
+    function minHelp(node) {
+      if (node.left === null && node.right === null) return 1;
+      if (node.left === null) return minHelp(node.right) + 1;
+      if (node.right === null) return minHelp(node.left) + 1;
+      return Math.min(minHelp(node.left), minHelp(node.right)) + 1;
+    }
+
+    return minHelp(this.root);
+  }
+
+  maxDepth() {
+    if (!this.root) return 0;
+
+    function maxHelp(node) {
+      if (node.left === null && node.right === null) return 1;
+      if (node.left === null) return maxHelp(node.right) + 1;
+      if (node.right === null) return maxHelp(node.left) + 1;
+      return Math.max(maxHelp(node.left), maxHelp(node.right)) + 1;
+    }
+
+    return maxHelp(this.root);
+  }
+
+  maxSum() {
+    let result = 0;
+
+    function mxSum(node) {
+      if (node === null) return 0;
+      const leftSum = mxSum(node.left);
+      const rightSum = mxSum(node.right);
+      result = Math.max(result, node.val + leftSum + rightSum);
+      return Math.max(0, leftSum + node.val, rightSum + node.val);
+    }
+
+    mxSum(this.root);
+    return result;
+  }
+
+  nextLarger(lowerBound) {
+    if (!this.root) return null;
+
+    let queue = [this.root];
+    let closest = null;
+
+    while (queue.length) {
+      let currentNode = queue.shift();
+      let currentVal = currentNode.val;
+
+      if (currentVal > lowerBound && (closest === null || currentVal < closest)) {
+        closest = currentVal;
+      }
+
+      if (currentNode.left) queue.push(currentNode.left);
+      if (currentNode.right) queue.push(currentNode.right);
+    }
+
+    return closest;
+  }
+
+  cousins(node1, node2) {
+    if (node1 === this.root || node2 === this.root) return false;
+
+    function findLevelAndParent(nodeToFind, currentNode, level = 0, data = { level: 0, parent: null }) {
+      if (data.parent) return data;
+      if (currentNode.left === nodeToFind || currentNode.right === nodeToFind) {
+        data.level = level + 1;
+        data.parent = currentNode;
+      }
+      if (currentNode.left) {
+        findLevelAndParent(nodeToFind, currentNode.left, level + 1, data);
+      }
+      if (currentNode.right) {
+        findLevelAndParent(nodeToFind, currentNode.right, level + 1, data);
+      }
+      return data;
+    }
+
+    let node1Info = findLevelAndParent(node1, this.root);
+    let node2Info = findLevelAndParent(node2, this.root);
+
+    return node1Info.level === node2Info.level && node1Info.parent !== node2Info.parent;
+  }
+
+  static srl(tree) {
+    const values = [];
+
+    function trv(node) {
+      if (node) {
+        values.push(node.val);
+        trv(node.left);
+        trv(node.right);
+      } else {
+        values.push("#");
+      }
+    }
+
+    trv(tree.root);
+    return values.join(" ");
+  }
+
+  static desrl(stringTree) {
+    if (!stringTree) return null;
+
+    const values = stringTree.split(" ");
+
+    function buildTree() {
+      if (values.length) {
+        const currentVal = values.shift();
+        if (currentVal === "#") return null;
+        let currentNode = new BinaryTreeNode(+currentVal);
+        currentNode.left = buildTree();
+        currentNode.right = buildTree();
+        return currentNode;
+      }
+    }
+
+    const root = buildTree();
+    return new BinaryTree(root);
+  }
+
+  lowestCommonAncestor(node1, node2, currentNode = this.root) {
+    if (currentNode === null) return null;
+    if (currentNode === node1 || currentNode === node2) return currentNode;
+
+    const left = this.lowestCommonAncestor(node1, node2, currentNode.left);
+    const right = this.lowestCommonAncestor(node1, node2, currentNode.right);
+
+    if (left !== null && right !== null) return currentNode;
+    return left || right;
+  }
+}
+
+module.exports = { BinaryTree, BinaryTreeNode };
